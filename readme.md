@@ -20,3 +20,4 @@ prereqs:
 -luma account
 -aws account
 -gcloud account
+- ghseet https://docs.google.com/spreadsheets/d/18AkvPdk1GfcPr5Zwq2dmcSNjKVdIX-ltCrk5FAR_cds/edit?gid=0#gid=0
