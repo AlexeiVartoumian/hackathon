@@ -11,6 +11,7 @@ pip install \
     google-auth \
     google-auth-oauthlib \
     google-auth-httplib2 \
+    requests \
     --target lambda-layer/python \
     --break-system-packages
 
