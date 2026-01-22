@@ -1,38 +1,46 @@
 import json
 import requests
 import re
+import random
 
-def hello(event, context):
-    url = "https://www.fantasynamegenerators.com/fungi-names.php"
+def lambda_handler(event, context):
+    
+    category = event.get('category', 'fungi')  # default to fungi
+    
+    """
+    way the website works is there is a a source/script/{category}Name js file .
+    Insidew there are arrays that generate usernames . can directly request that .
+    """
+    js_url = f"https://www.fantasynamegenerators.com/scripts/{category}Names.js"
+    
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
     
     try:
-        # Make the request
-        print("making requesr")
-        response = requests.get(url , headers = headers)
+        response = requests.get(js_url, headers=headers)
         response.raise_for_status()
-        print("=" * 50)
-        print("RESPONSE CONTENT:")
-        print(response.text)
-        print("=" * 50)
-        # Extract the content between <div id="result"> and </div>
-        match = re.search(r'<div id="result">(.*?)</div>', response.text, re.DOTALL)
         
-        if match:
+        
+        nm1_match = re.search(r'var nm1 = (\[.*?\]);', response.text, re.DOTALL)
+        nm2_match = re.search(r'var nm2 = (\[.*?\]);', response.text, re.DOTALL)
+        
+        if nm1_match and nm2_match:
             
-            content = match.group(1)
-            names = [name.strip() for name in content.split('<br>') if name.strip()]
+            nm1 = json.loads(nm1_match.group(1))
+            nm2 = json.loads(nm2_match.group(1))
             
+            
+            names = []
+            for i in range(10):
+                name = f"{nm1[random.randint(0, len(nm1)-1)]} {nm2[random.randint(0, len(nm2)-1)]}"
+                names.append(name)
+            
+            print(names)
             return {
                 'statusCode': 200,
                 'body': json.dumps({
+                    'category': category,
                     'names': names,
                     'count': len(names)
                 })
@@ -40,7 +48,7 @@ def hello(event, context):
         else:
             return {
                 'statusCode': 404,
-                'body': json.dumps({'error': 'Could not find result div'})
+                'body': json.dumps({'error': 'Could not find name arrays in JS file'})
             }
             
     except Exception as e:
@@ -48,6 +56,3 @@ def hello(event, context):
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
         }
-    
-
-hello("hi" ,"hi")
